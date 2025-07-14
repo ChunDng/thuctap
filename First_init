@@ -1,3 +1,14 @@
+
+// --- Biến trạng thái ---
+bool relay1State = false; // Trạng thái quạt
+bool relay2State = false; // Trạng thái đèn
+bool autoMode = false;    // Chế độ tự động
+
+// --- Khai báo chân GPIO ---
+#define BUTTON1_PIN 0  // Sử dụng SW2 trên kit
+#define BUTTON2_PIN 14 // Sử dụng SW3 trên kit 
+
+---- Định nghĩa nút nhấn ----
 void setup() {
   Serial.begin(115200);
 
@@ -6,4 +17,37 @@ void setup() {
   // Cấu hình nút nhấn
   pinMode(BUTTON1_PIN, INPUT_PULLUP); // Nút nhấn SW2 (GPIO0)
   pinMode(BUTTON2_PIN, INPUT_PULLUP); // Nút nhấn SW3 (GPIO14)
+}
+
+---- Viết logic đọc và xử lý debounce ----
+void loop() {
+  // ... các xử lý web server, đọc cảm biến định kỳ khác ...
+
+  // --- Xử lý nút nhấn 1 (ví dụ: điều khiển Quạt) ---
+  if (digitalRead(BUTTON1_PIN) == LOW) { // Kiểm tra xem nút có được nhấn (LOW vì là pull-up)
+    delay(50); // Chống rung: chờ 50ms để các tín hiệu giả ổn định
+    if (digitalRead(BUTTON1_PIN) == LOW) { // Xác nhận lại: kiểm tra một lần nữa sau khi chờ
+      // Thực hiện hành động khi nút được nhấn thật sự
+      relay1State = !relay1State; // Đảo trạng thái của Relay 1 (Quạt)
+      digitalWrite(RELAY1_PIN, relay1State ? HIGH : LOW); // Cập nhật trạng thái vật lý của Relay 1
+      Serial.printf("Relay 1 (Quat) changed to: %s\n", relay1State ? "ON" : "OFF"); // In ra Serial Monitor
+      updateTFT(); // Cập nhật trạng thái hiển thị trên màn hình TFT
+
+      while (digitalRead(BUTTON1_PIN) == LOW); // Chờ cho đến khi nút được nhả hoàn toàn
+    }
+  }
+
+  // --- Xử lý nút nhấn 2 (ví dụ: điều khiển Đèn) ---
+  if (digitalRead(BUTTON2_PIN) == LOW) { // Kiểm tra xem nút có được nhấn
+    delay(50); // Chống rung
+    if (digitalRead(BUTTON2_PIN) == LOW) { // Xác nhận lại
+      // Thực hiện hành động khi nút được nhấn thật sự
+      relay2State = !relay2State; // Đảo trạng thái của Relay 2 (Đèn)
+      digitalWrite(RELAY2_PIN, relay2State ? HIGH : LOW); // Cập nhật trạng thái vật lý của Relay 2
+      Serial.printf("Relay 2 (Den) changed to: %s\n", relay2State ? "ON" : "OFF"); // In ra Serial Monitor
+      updateTFT(); // Cập nhật trạng thái hiển thị trên màn hình TFT
+
+      while (digitalRead(BUTTON2_PIN) == LOW); // Chờ cho đến khi nút được nhả hoàn toàn
+    }
+  }
 }
